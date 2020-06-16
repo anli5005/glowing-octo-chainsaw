@@ -7,6 +7,7 @@ import nltk.data
 import scipy.spatial.distance as sd
 import numpy as np
 import os
+import email
 
 print("Imports complete.")
 
@@ -18,54 +19,23 @@ print("Constructing encoder manager...")
 encoder = encoder_manager.EncoderManager()
 encoder.load_model(configuration.model_config(bidirectional_encoder=True), vocabulary_file="skip_thoughts_bi_2017_02_16/vocab.txt", embedding_matrix_file="skip_thoughts_bi_2017_02_16/embeddings.npy", checkpoint_path="skip_thoughts_bi_2017_02_16/model.ckpt-500008")
 
+parser = email.parser.Parser()
+
 def encoding_for_email(path):
     handle = open(path, "r")
+    msg = parser.parse(handle)
+    handle.close()
 
-    header = ""
     subject = None
-    boundary = None
-    header_ended = False
+    try:
+        subject = handle["subject"]
+    except:
+        subject = None
+    
     text = None
-    section_header_ended = False
-    section_is_text = False
-
-    while True:
-        line = handle.readline()
-
-        if len(line) == 0:
-            break
-
-        if not header_ended and re.match(r"^(?:\r?\n)?$", line) is not None:
-            header_ended = True
-            subject = re.search(re.compile(r"^Subject: (.*)$", re.MULTILINE), header).group(1)
-
-            boundary = re.search(re.compile(r"^Content-Type: multipart/(alternative|related|mixed);\r?\n?[ \t]+boundary=\"(.*)\"", re.MULTILINE), header).group(1)
-
-        if header_ended:
-            if re.match(r"^--" + re.escape(boundary) + r"(?:--)?(?:\r?\n)?$", line) is not None or re.match(r"^________________________________(?:\r?\n)?$", line) is not None:
-                section_header_ended = False
-                if section_is_text:
-                    break
-                section_is_text = False
-                text = None
-                if line.endswith("--"):
-                    print("No text section.")
-            elif not section_header_ended:
-                if re.match(r"^(?:\r?\n)?$", line) is not None:
-                    section_header_ended = True
-                    continue
-
-                if re.search(r"^Content-Type: text/plain", line) is not None:
-                    section_is_text = True
-                    text = ""
-                
-                if section_is_text and re.search("base64", line) is not None:
-                    section_is_text = False
-                    text = None
-            elif section_is_text:
-                text += line
-        else:
-            header += line
+    for part in msg.walk():
+        if part.get_content_type() == "text/plain":
+            text = part.get_payload(decode=True).decode(part.get_content_charset("utf-8")).split("________________________________")[0]
 
     print("Detecting sentences...")
     sentences = []
@@ -84,7 +54,7 @@ def encoding_for_email(path):
 
     handle.close()
 
-    return np.mean(encodings, axis=0), subject, text
+    return np.mean(encodings, axis=0), subject, data
 
 if __name__ == "__main__":
     folders = [filename for filename in os.listdir(sys.argv[1]) if not filename.startswith(".")]
@@ -101,6 +71,7 @@ if __name__ == "__main__":
                 print("Done with %s - %s" % (folder, filename))
             except:
                 print("==> Error reading %s - %s" % (folder, filename))
+                print(sys.exc_info()[0])
         i += 1
     np.save('x.npy', x)
     np.save('y.npy', y)

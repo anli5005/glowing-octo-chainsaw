@@ -12,7 +12,6 @@ print(encoding)
 
 print("Reading model...")
 model = tf.keras.models.load_model('models/saved_model')
-model.summary()
 
 inp = np.array([encoding])
 y = model.predict(inp, verbose=2)
