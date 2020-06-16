@@ -5,9 +5,7 @@ import numpy as np
 
 categories = ["Email Chains", "Announcements", "Lost Items", "Links", "Surveys", "Communication", "Automated Emails", "Administration"]
 
-encoding, subject, text = process_data.encoding_for_email(sys.argv[1])
-print(subject)
-print(text)
+encoding = process_data.encoding_for_email(sys.argv[1])
 print(encoding)
 
 print("Reading model...")

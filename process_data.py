@@ -7,8 +7,7 @@ import nltk.data
 import scipy.spatial.distance as sd
 import numpy as np
 import os
-import email
-from bs4 import BeautifulSoup
+from parse_email import parse_email
 
 print("Imports complete.")
 
@@ -20,32 +19,11 @@ print("Constructing encoder manager...")
 encoder = encoder_manager.EncoderManager()
 encoder.load_model(configuration.model_config(bidirectional_encoder=True), vocabulary_file="skip_thoughts_bi_2017_02_16/vocab.txt", embedding_matrix_file="skip_thoughts_bi_2017_02_16/embeddings.npy", checkpoint_path="skip_thoughts_bi_2017_02_16/model.ckpt-500008")
 
-parser = email.parser.Parser()
-
-def encoding_for_email(path):
-    handle = open(path, "r")
-    msg = parser.parse(handle)
-    handle.close()
-
-    subject = None
-    try:
-        subject = handle["subject"]
-    except:
-        subject = None
-    
-    text = None
-    for part in msg.walk():
-        if part.get_content_type() == "text/plain":
-            text = part.get_payload(decode=True).decode(part.get_content_charset("utf-8")).split("________________________________")[0]
-            try:
-                text = BeautifulSoup(text).get_text()
-            except:
-                print("Unable to parse HTML.")
-
+def encoding_for_text(subject, text):
     print("Detecting sentences...")
     sentences = []
     if text is not None:
-        sentences += sentence_detector.tokenize(re.sub(r"=(\r?\n)?", "", text.replace("=92", "'")).strip())
+        sentences += sentence_detector.tokenize(text)
     if subject is not None:
         sentences.append(subject)
 
@@ -57,9 +35,11 @@ def encoding_for_email(path):
 
     encodings = encoder.encode(data)
 
-    handle.close()
+    return np.mean(encodings, axis=0)
 
-    return np.mean(encodings, axis=0), subject, data
+def encoding_for_email(path):
+    subject, text = parse_email(path)
+    return encoding_for_text(subject, text)
 
 if __name__ == "__main__":
     folders = [filename for filename in os.listdir(sys.argv[1]) if not filename.startswith(".")]
@@ -70,7 +50,7 @@ if __name__ == "__main__":
         files = [filename for filename in os.listdir(os.path.join(sys.argv[1], folder)) if filename.endswith(".eml")]
         for filename in files:
             try:
-                encoding, _a, _b = encoding_for_email(os.path.join(sys.argv[1], folder, filename))
+                encoding = encoding_for_email(os.path.join(sys.argv[1], folder, filename))
                 x = np.append(x, [encoding], axis=0)
                 y = np.append(y, i)
                 print("Done with %s - %s" % (folder, filename))
