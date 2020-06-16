@@ -8,6 +8,7 @@ import scipy.spatial.distance as sd
 import numpy as np
 import os
 import email
+from bs4 import BeautifulSoup
 
 print("Imports complete.")
 
@@ -36,6 +37,10 @@ def encoding_for_email(path):
     for part in msg.walk():
         if part.get_content_type() == "text/plain":
             text = part.get_payload(decode=True).decode(part.get_content_charset("utf-8")).split("________________________________")[0]
+            try:
+                text = BeautifulSoup(text).get_text()
+            except:
+                print("Unable to parse HTML.")
 
     print("Detecting sentences...")
     sentences = []
