@@ -1,5 +1,6 @@
 import email
 from bs4 import BeautifulSoup
+import re
 
 parser = email.parser.Parser()
 

@@ -10,7 +10,7 @@ model = tf.keras.models.load_model('models/saved_model')
 
 @app.route("/", methods=["POST"])
 def analyze_email():
-    encoding = encoding_for_text(request.json["subject"], request.json["text"])
+    encoding = encoding_for_text(request.json["subject"] if "subject" in request.json else None, request.json["text"] if "text" in request.json else None)
     inp = np.array([encoding])
     y = model.predict(inp, verbose=2)
     result = {"ok": True, "result": y[0].tolist()}

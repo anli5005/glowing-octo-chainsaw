@@ -6,3 +6,5 @@ venv
 checkpoints
 __pycache__
 models
+logs
+tuning

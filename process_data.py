@@ -22,14 +22,14 @@ encoder.load_model(configuration.model_config(bidirectional_encoder=True), vocab
 def encoding_for_text(subject, text):
     print("Detecting sentences...")
     sentences = []
-    if text is not None:
+    if text is not None and len(text.strip()) > 0:
         sentences += sentence_detector.tokenize(text)
-    if subject is not None:
+    if subject is not None and len(subject.strip()) > 0:
         sentences.append(subject)
 
     print("Tokenizing sentences...")
 
-    data = [" ".join(tokenizer.tokenize(sentence.strip())) for sentence in sentences]
+    data = [" ".join(tokenizer.tokenize(sentence.strip())) for sentence in sentences if len(sentence) > 0]
 
     print("Encoding...")
 
@@ -48,6 +48,7 @@ if __name__ == "__main__":
     y = np.array([])
     for folder in folders:
         files = [filename for filename in os.listdir(os.path.join(sys.argv[1], folder)) if filename.endswith(".eml")]
+        j = 0
         for filename in files:
             try:
                 encoding = encoding_for_email(os.path.join(sys.argv[1], folder, filename))
@@ -57,6 +58,9 @@ if __name__ == "__main__":
             except:
                 print("==> Error reading %s - %s" % (folder, filename))
                 print(sys.exc_info()[0])
+            j += 1
+            if j > 200: # Hard limit to balance out training data
+                break
         i += 1
     np.save('x.npy', x)
     np.save('y.npy', y)
