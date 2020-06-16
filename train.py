@@ -23,4 +23,4 @@ print('\nTest accuracy:', test_acc)
 np.set_printoptions(threshold=np.inf)
 print(testY)
 
-model.save_weights('./checkpoints/my_checkpoint')
+# model.save('./models/saved_model')

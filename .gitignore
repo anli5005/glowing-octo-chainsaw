@@ -4,3 +4,5 @@ y.npy
 venv
 .vscode
 checkpoints
+__pycache__
+models

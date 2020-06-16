@@ -84,22 +84,23 @@ def encoding_for_email(path):
 
     handle.close()
 
-    return np.mean(encodings, axis=0)
+    return np.mean(encodings, axis=0), subject, text
 
-folders = [filename for filename in os.listdir(sys.argv[1]) if not filename.startswith(".")]
-i = 0
-x = np.empty((0, 2400))
-y = np.array([])
-for folder in folders:
-    files = [filename for filename in os.listdir(os.path.join(sys.argv[1], folder)) if filename.endswith(".eml")]
-    for filename in files:
-        try:
-            encoding = encoding_for_email(os.path.join(sys.argv[1], folder, filename))
-            x = np.append(x, [encoding], axis=0)
-            y = np.append(y, i)
-            print("Done with %s - %s" % (folder, filename))
-        except:
-            print("==> Error reading %s - %s" % (folder, filename))
-    i += 1
-np.save('x.npy', x)
-np.save('y.npy', y)
+if __name__ == "__main__":
+    folders = [filename for filename in os.listdir(sys.argv[1]) if not filename.startswith(".")]
+    i = 0
+    x = np.empty((0, 2400))
+    y = np.array([])
+    for folder in folders:
+        files = [filename for filename in os.listdir(os.path.join(sys.argv[1], folder)) if filename.endswith(".eml")]
+        for filename in files:
+            try:
+                encoding, _a, _b = encoding_for_email(os.path.join(sys.argv[1], folder, filename))
+                x = np.append(x, [encoding], axis=0)
+                y = np.append(y, i)
+                print("Done with %s - %s" % (folder, filename))
+            except:
+                print("==> Error reading %s - %s" % (folder, filename))
+        i += 1
+    np.save('x.npy', x)
+    np.save('y.npy', y)
