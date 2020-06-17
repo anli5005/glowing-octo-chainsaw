@@ -1,7 +1,7 @@
 from process_data import encoding_for_text
 import tensorflow as tf
 import numpy as np
-from flask import Flask, request, json
+from flask import Flask, request, json, make_response
 
 app = Flask(__name__)
 
@@ -17,5 +17,11 @@ def analyze_email():
     if "include_encoding" in request.json and request.json["include_encoding"]:
         result["encoding"] = encoding.tolist()
     return json.jsonify(result)
+
+@app.after_request
+def add_cors_header(res):
+    res.headers["Access-Control-Allow-Origin"] = "*"
+    res.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    return res
 
 print("Done starting!")

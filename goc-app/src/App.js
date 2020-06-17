@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import samples from './samples.json';
 import EmailList from './EmailList';
 import fetchData from './fetch';
+import analyze from './analyze';
 
 const FillGrommet = styled(Grommet)`
   height: 100%;
@@ -20,7 +21,7 @@ const FillHeading = styled(Heading)`
   max-width: none;
 `;
 
-const RefreshButton = styled(Button)`
+const FancyButton = styled(Button)`
   font-weight: bold;
   padding: 0 18px;
 `;
@@ -33,6 +34,7 @@ function App() {
   const [email, setEmail] = useState(null);
   const [inbox, setInbox] = useState({emails: [], more: null});
   const [refreshing, setRefreshing] = useState(false);
+  const [chainsawing, setChainsawing] = useState({});
 
   async function refresh() {
     setRefreshing(true);
@@ -55,21 +57,30 @@ function App() {
               </Box>
             </Tab>
             <Tab title="Inbox">
-              <RefreshButton primary margin={{left: "medium", vertical: "xsmall"}} onClick={() => refresh()} disabled={refreshing}>Refresh</RefreshButton>
+              <FancyButton primary margin={{left: "medium", vertical: "xsmall"}} onClick={() => refresh()} disabled={refreshing}>Refresh</FancyButton>
               <Box fill="vertical" flex="grow" overflow="auto">
                 <EmailList emails={inbox.emails} selectEmail={setEmail} />
               </Box>
             </Tab>
           </Tabs>
         </Box>
-        <FillGrid rows={["flex", "small"]}>
+        <FillGrid rows={["flex", "medium"]}>
           <Main pad="medium" fill="horizontal">
             {email ? <React.Fragment>
               {email.subject ? <FillHeading level={3}>{email.subject}</FillHeading> : <Heading level={3} color="status-unknown">(no subject)</Heading>}
               <Paragraph fill>{email.text}</Paragraph>
             </React.Fragment> : <Heading level={3} color="status-unknown">Select an email to analyze it</Heading>}
           </Main>
-          <Box background="light-1">Box!</Box>
+          <Box background="light-1">
+            {email && <React.Fragment>
+              <Box>
+                <FancyButton primary margin="small" disabled={email.chainsawing} onClick={async () => {
+                  setEmail(Object.assign({}, email, {chainsawing: true}));
+                  setEmail(Object.assign({}, email, {analysis: await analyze(email), chainsawing: false}));
+                }}>Analyze</FancyButton>
+              </Box>
+            </React.Fragment>}
+          </Box>
         </FillGrid>
       </Grid>
     </FillGrommet>
