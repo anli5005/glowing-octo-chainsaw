@@ -8,3 +8,4 @@ __pycache__
 models
 logs
 tuning
+goc-app/src/samples.json
