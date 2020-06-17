@@ -3,8 +3,6 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 import { createGlobalStyle } from 'styled-components';
-import { AzureAD } from 'react-aad-msal';
-import auth from './auth';
 
 const GlobalStyle = createGlobalStyle`
 html, body, #root {
@@ -22,9 +20,7 @@ html, body, #root {
 ReactDOM.render(
   <React.StrictMode>
     <GlobalStyle />
-    <AzureAD provider={auth} forceLogin>
-      <App />
-    </AzureAD>
+    <App />
   </React.StrictMode>,
   document.getElementById('root')
 );

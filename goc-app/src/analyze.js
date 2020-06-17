@@ -11,12 +11,14 @@ export default async function({subject, text}) {
     const json = await response.json();
 
     if (json.ok) {
-        const min = json.result.reduce(Math.min);
-        const max = json.result.reduce(Math.max);
+        const min = json.result.reduce((a, b) => Math.min(a, b));
+        const max = json.result.reduce((a, b) => Math.max(a, b));
         return {
             encoding: json.encoding,
-            result: json.result.map((value, index) => ({category: categories[index], value, normalized: (value - min) / (max - min)}))
-                .sort((a, b) => a.value - b.value)
+            result: json.result.map((value, index) => ({category: categories[index], value}))
+                .sort((a, b) => b.value - a.value),
+            min,
+            max
         };
     } else {
         throw new Error("JSON is not okay");

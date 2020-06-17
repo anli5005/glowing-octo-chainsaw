@@ -4,8 +4,11 @@ import { deepMerge } from 'grommet/utils';
 import styled from 'styled-components';
 import samples from './samples.json';
 import EmailList from './EmailList';
-import fetchData from './fetch';
+import auth from './auth';
 import analyze from './analyze';
+import fetchData from './fetch';
+import { AzureAD, AuthenticationState } from 'react-aad-msal';
+import AnalysisView from './AnalysisView';
 
 const FillGrommet = styled(Grommet)`
   height: 100%;
@@ -34,7 +37,6 @@ function App() {
   const [email, setEmail] = useState(null);
   const [inbox, setInbox] = useState({emails: [], more: null});
   const [refreshing, setRefreshing] = useState(false);
-  const [chainsawing, setChainsawing] = useState({});
 
   async function refresh() {
     setRefreshing(true);
@@ -43,8 +45,12 @@ function App() {
   }
 
   useEffect(() => {
-    refresh();
-  }, []);
+    if (auth.authenticationState === AuthenticationState.Authenticated) {
+      refresh();
+    } else {
+      setInbox({emails: [], more: null});
+    }
+  }, [auth.authenticationState]);
 
   return (
     <FillGrommet theme={theme}>
@@ -57,14 +63,29 @@ function App() {
               </Box>
             </Tab>
             <Tab title="Inbox">
-              <FancyButton primary margin={{left: "medium", vertical: "xsmall"}} onClick={() => refresh()} disabled={refreshing}>Refresh</FancyButton>
-              <Box fill="vertical" flex="grow" overflow="auto">
-                <EmailList emails={inbox.emails} selectEmail={setEmail} />
-              </Box>
+              <AzureAD provider={auth}>
+                {
+                  ({login, authenticationState}) => {
+                    console.log(authenticationState);
+                    if (authenticationState === AuthenticationState.Authenticated) {
+                      return (
+                        <React.Fragment>
+                          <FancyButton primary margin={{left: "medium", vertical: "xsmall"}} onClick={() => refresh()} disabled={refreshing}>Refresh</FancyButton>
+                          <Box fill="vertical" flex="grow" overflow="auto">
+                            <EmailList emails={inbox.emails} selectEmail={setEmail} />
+                          </Box>
+                        </React.Fragment>
+                      );
+                    } else {
+                      return <FancyButton primary margin={{left: "medium", top: "xsmall"}} onClick={login} disabled={authenticationState === AuthenticationState.InProgress}>Sign in with Outlook</FancyButton>
+                    }
+                  }
+                }
+              </AzureAD>
             </Tab>
           </Tabs>
         </Box>
-        <FillGrid rows={["flex", "medium"]}>
+        <FillGrid rows={["flex", "288px"]}>
           <Main pad="medium" fill="horizontal">
             {email ? <React.Fragment>
               {email.subject ? <FillHeading level={3}>{email.subject}</FillHeading> : <Heading level={3} color="status-unknown">(no subject)</Heading>}
@@ -74,6 +95,7 @@ function App() {
           <Box background="light-1">
             {email && <React.Fragment>
               <Box>
+                {email.analysis && <AnalysisView analysis={email.analysis} />}
                 <FancyButton primary margin="small" disabled={email.chainsawing} onClick={async () => {
                   setEmail(Object.assign({}, email, {chainsawing: true}));
                   setEmail(Object.assign({}, email, {analysis: await analyze(email), chainsawing: false}));
