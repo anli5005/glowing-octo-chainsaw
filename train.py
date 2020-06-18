@@ -16,7 +16,7 @@ model = tf.keras.Sequential([
 
 model.compile(tf.keras.optimizers.Adam(learning_rate=0.01), loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=["accuracy"])
 tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), histogram_freq=1)
-model.fit(trainX, trainY, epochs=30, validation_data=(testX, testY), callbacks=[tensorboard_callback])
+model.fit(trainX, trainY, epochs=50, validation_data=(testX, testY), callbacks=[tensorboard_callback])
 
 test_loss, test_acc = model.evaluate(testX, testY, verbose=2)
 print('\nTest accuracy:', test_acc)

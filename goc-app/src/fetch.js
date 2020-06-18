@@ -4,7 +4,12 @@ const parser = new DOMParser();
 
 function stripTags(str) {
     let doc = parser.parseFromString(str, "text/html");
-    return doc.body.innerText.split(/From: [^ ]/)[0];
+    doc.querySelectorAll("style, script").forEach(el => el.parentNode.removeChild(el));
+    doc.querySelectorAll("p").forEach(el => el.append("(GLOWING-OCTO-CHAINSAW-NEWLINE)"));
+    let text = doc.body.innerText.replace(/\(GLOWING-OCTO-CHAINSAW-NEWLINE\)/g, "\n");
+    console.log(text);
+    // text = text.split(/From: [^ ]/)[0];
+    return text.replace(/<|>/g, "");
 }
 
 export default async function(url) {

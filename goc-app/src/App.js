@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Grommet, Grid, Box, Main, grommet, Tabs, Tab, Heading, Paragraph, Button } from 'grommet';
+import { Grommet, Grid, Box, Main, grommet, Tabs, Tab, Heading, Paragraph } from 'grommet';
 import { deepMerge } from 'grommet/utils';
 import styled from 'styled-components';
 import samples from './samples.json';
@@ -9,6 +9,7 @@ import analyze from './analyze';
 import fetchData from './fetch';
 import { AzureAD, AuthenticationState } from 'react-aad-msal';
 import AnalysisView from './AnalysisView';
+import FancyButton from './FancyButton';
 
 const FillGrommet = styled(Grommet)`
   height: 100%;
@@ -24,19 +25,56 @@ const FillHeading = styled(Heading)`
   max-width: none;
 `;
 
-const FancyButton = styled(Button)`
-  font-weight: bold;
-  padding: 0 18px;
+const Content = styled(Paragraph)`
+  white-space: pre-line;
 `;
 
 const theme = deepMerge(grommet, {
-  global: {}
+  global: {
+    colors: {
+      brand: "#4272f5",
+      "graph-1": "accent-4",
+      "graph-2": "status-warning",
+      "graph-3": "status-critical"
+    }
+  },
+  button: {
+    default: {
+      color: "brand",
+      background: {
+        color: "brand",
+        opacity: 0.3
+      }
+    },
+    primary: {
+      color: "white",
+      background: {
+        color: "brand"
+      }
+    }
+  },
+  tab: {
+    active: {
+      color: "brand",
+      extend: {
+        fontWeight: "bold"
+      }
+    },
+    color: "#c4d4ff",
+    border: {
+      color: {
+        light: "#c4d4ff"
+      },
+      active: {color: {light: "brand"}}
+    }
+  }
 });
 
 function App() {
   const [email, setEmail] = useState(null);
   const [inbox, setInbox] = useState({emails: [], more: null});
   const [refreshing, setRefreshing] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
 
   async function refresh() {
     setRefreshing(true);
@@ -50,34 +88,40 @@ function App() {
     } else {
       setInbox({emails: [], more: null});
     }
-  }, [auth.authenticationState]);
+  }, [loggedIn]);
 
   return (
     <FillGrommet theme={theme}>
       <Grid columns={["medium", "flex"]} fill>
-        <Box background="light-3" pad={{top: "small"}} overflow="auto" height="100vh">
+        <Box background="light-1" pad={{top: "small"}} overflow="auto" height="100vh" border="right">
           <Tabs>
             <Tab title="Samples">
-              <Box fill="vertical" flex="grow" overflow="auto">
-                <EmailList emails={samples} selectEmail={setEmail} />
+              <Box fill="vertical" flex="grow" overflow="auto" margin={{top: "small"}}>
+                <EmailList emails={samples} selectEmail={setEmail} selectedId={email && email.id} />
               </Box>
             </Tab>
             <Tab title="Inbox">
               <AzureAD provider={auth}>
                 {
-                  ({login, authenticationState}) => {
-                    console.log(authenticationState);
+                  ({login, authenticationState, logout}) => {
                     if (authenticationState === AuthenticationState.Authenticated) {
+                      setLoggedIn(true);
                       return (
                         <React.Fragment>
-                          <FancyButton primary margin={{left: "medium", vertical: "xsmall"}} onClick={() => refresh()} disabled={refreshing}>Refresh</FancyButton>
+                          <Box direction="row" align="center" justify="center" margin={{vertical: "medium"}}>
+                            <FancyButton primary onClick={() => refresh()} disabled={refreshing}>Refresh</FancyButton>
+                            <FancyButton margin={{left: "medium"}} onClick={logout}>Log Out</FancyButton>
+                          </Box>
                           <Box fill="vertical" flex="grow" overflow="auto">
-                            <EmailList emails={inbox.emails} selectEmail={setEmail} />
+                            <EmailList emails={inbox.emails} selectEmail={setEmail} selectedId={email && email.id} />
                           </Box>
                         </React.Fragment>
                       );
                     } else {
-                      return <FancyButton primary margin={{left: "medium", top: "xsmall"}} onClick={login} disabled={authenticationState === AuthenticationState.InProgress}>Sign in with Outlook</FancyButton>
+                      setLoggedIn(false);
+                      return <Box align="center" justify="center" margin={{vertical: "large"}}>
+                        <FancyButton primary onClick={login} disabled={authenticationState === AuthenticationState.InProgress}>Sign in with Outlook</FancyButton>
+                      </Box>
                     }
                   }
                 }
@@ -85,14 +129,14 @@ function App() {
             </Tab>
           </Tabs>
         </Box>
-        <FillGrid rows={["flex", "288px"]}>
+        <FillGrid rows={["flex", "300px"]}>
           <Main pad="medium" fill="horizontal">
             {email ? <React.Fragment>
               {email.subject ? <FillHeading level={3}>{email.subject}</FillHeading> : <Heading level={3} color="status-unknown">(no subject)</Heading>}
-              <Paragraph fill>{email.text}</Paragraph>
+              <Content margin={{top: "medium"}} fill>{email.text}</Content>
             </React.Fragment> : <Heading level={3} color="status-unknown">Select an email to analyze it</Heading>}
           </Main>
-          <Box background="light-1">
+          <Box background="light-1" overflow="auto" border="top">
             {email && <React.Fragment>
               <Box>
                 {email.analysis && <AnalysisView analysis={email.analysis} />}

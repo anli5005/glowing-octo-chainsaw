@@ -29,7 +29,8 @@ def encoding_for_text(subject, text):
 
     print("Tokenizing sentences...")
 
-    data = [" ".join(tokenizer.tokenize(sentence.strip())) for sentence in sentences if len(sentence) > 0]
+    words = [tokenizer.tokenize(sentence.strip()) for sentence in sentences]
+    data = [" ".join(sentence_words[:40]) for sentence_words in words if len(sentence_words) > 0]
 
     print("Encoding...")
 
