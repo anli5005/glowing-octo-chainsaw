@@ -27,6 +27,7 @@ const FillHeading = styled(Heading)`
 
 const Content = styled(Paragraph)`
   white-space: pre-line;
+  word-wrap: break-word;
 `;
 
 const theme = deepMerge(grommet, {

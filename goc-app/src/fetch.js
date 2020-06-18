@@ -14,7 +14,7 @@ function stripTags(str) {
 
 export default async function(url) {
     const {accessToken} = await auth.getAccessToken();
-    const response = await fetch(url || "https://graph.microsoft.com/v1.0/me/mailFolders('Inbox')/messages?$select=subject,body&$top=40", {
+    const response = await fetch(url || "https://graph.microsoft.com/v1.0/me/mailFolders('Inbox')/messages?$select=subject,body&$top=70", {
         headers: {Authorization: `Bearer ${accessToken}`}
     });
     const json = await response.json();
